@@ -1,5 +1,5 @@
 use anyhow::{bail, Context, Result};
-use std::{fs::File, io::{Read, Write, BufRead, BufReader}, process::Command, sync::{Arc, atomic::{AtomicBool, Ordering}}, thread, time::Duration};
+use std::{fs::File, io::{Read, Write, Seek, SeekFrom, BufRead, BufReader}, process::Command, sync::{Arc, atomic::{AtomicBool, Ordering}}, thread, time::Duration};
 
 pub fn run(device: &str, width: u32, height: u32, bpp: u32) -> Result<()> {
     if width == 0 || height == 0 || width as u64 * height as u64 > 20_000_000 { bail!("invalid framebuffer dimensions"); }
@@ -30,7 +30,10 @@ pub fn run(device: &str, width: u32, height: u32, bpp: u32) -> Result<()> {
     eprintln!("rust-fb-remote agent: {device}, {width}x{height}, {bpp} bpp");
     loop {
         if stop.load(Ordering::Relaxed) { break; }
-        fb.read_exact(&mut raw).context("framebuffer read failed; device may expose a non-streaming or padded framebuffer")?;
+        // fbdev is a finite memory mapping exposed as a file, not an endless video stream.
+        // Rewind to byte 0 before sampling each frame; otherwise the file offset reaches EOF.
+        fb.seek(SeekFrom::Start(0)).context("cannot seek framebuffer to the start")?;
+        fb.read_exact(&mut raw).with_context(|| format!("could not read {} bytes from {device}; check width/height/bpp and framebuffer line padding", raw.len()))?;
         for i in 0..pixels {
             let s = i*bytes_per_pixel; let d=i*3;
             match bpp {

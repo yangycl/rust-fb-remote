@@ -1,6 +1,6 @@
 [package]
 name = "rust-fb-remote"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 license = "GPL-3.0-or-later"
 description = "SSH-based Linux framebuffer remote desktop with remote input injection"
@@ -10,3 +10,4 @@ anyhow = "1"
 clap = { version = "4", features = ["derive"] }
 eframe = "0.29"
 image = { version = "0.25", default-features = false, features = ["bmp"] }
+libc = "0.2"

@@ -31,14 +31,15 @@ enum Mode {
         address: String,
     },
     /// Run the framebuffer agent locally.
+    /// Width/height/bpp default to 0 = auto-detect from the device via ioctl.
     Agent {
         #[arg(long, default_value = "/dev/fb0")]
         device: String,
-        #[arg(long, default_value_t = 800)]
+        #[arg(long, default_value_t = 0)]
         width: u32,
-        #[arg(long, default_value_t = 600)]
+        #[arg(long, default_value_t = 0)]
         height: u32,
-        #[arg(long, default_value_t = 32)]
+        #[arg(long, default_value_t = 0)]
         bpp: u32,
         /// Optional TCP listen address for manual mode, e.g. 100.78.63.74:24800.
         #[arg(long)]
@@ -75,17 +76,9 @@ fn main() -> Result<()> {
 
 fn connect_ssh(host: String, agent: String) -> Result<()> {
     // OpenSSH preserves normal known_hosts checking and authentication.
+    // Agent auto-detects real width/height/bpp via ioctl; no hard-coded size.
     let mut child = Command::new("ssh")
-        .args([
-            "-T",
-            &host,
-            &agent,
-            "agent",
-            "--width",
-            "800",
-            "--height",
-            "600",
-        ])
+        .args(["-T", &host, &agent, "agent"])
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::inherit())

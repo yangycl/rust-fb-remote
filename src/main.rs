@@ -4,7 +4,7 @@ use eframe::egui;
 use std::{
     io::{Read, Write},
     net::TcpStream,
-    process::{Child, ChildStdout, Command, Stdio},
+    process::{Child, Command, Stdio},
     sync::mpsc,
     thread,
     time::Duration,
